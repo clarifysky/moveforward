@@ -204,10 +204,17 @@ npm start
 
 
 [1]:https://www.npmjs.com/package/lite-server
+
 [2]:https://angular.io/docs/ts/latest/guide/typescript-configuration.html#!#typings
+
 [3]:https://angular.io/docs/ts/latest/guide/typescript-configuration.html#!#typings
+
 [4]:https://angular.io/docs/ts/latest/quickstart.html#libraries
+
 [5]:https://angular.io/docs/ts/latest/guide/npm-packages.html
+
 [6]:https://angular.io/docs/ts/latest/guide/typescript-configuration.html#tsconfig
+
 [7]:https://angular.io/docs/ts/latest/guide/typescript-configuration.html#!#typings
+
 [8]:https://angular.io/docs/ts/latest/quickstart.html#systemjs
