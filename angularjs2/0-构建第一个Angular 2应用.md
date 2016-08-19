@@ -1,9 +1,5 @@
 # 构建第一个Angular 2 应用
 
-> 翻译自：https://angular.io/docs/ts/latest/quickstart.html
-
-> translated from here: https://angular.io/docs/ts/latest/quickstart.html
-
 > 这是TypeScript版本。｜This is the TypeScript version.
 
 - 前置条件：安装Node.js。
