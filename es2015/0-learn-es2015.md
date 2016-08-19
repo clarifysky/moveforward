@@ -519,7 +519,7 @@ c["key"] === undefined
 
 > ### 来自polyfill的受限支持
 
-> 受限的支持需要Babel polyfill，由于语言的限制，一些特性不能被编译或填充。查看core.js的[caveats section])(https://github.com/zloirock/core-js#caveats-when-using-symbol-polyfill)获取更多细节。
+> 受限的支持需要Babel polyfill，由于语言的限制，一些特性不能被编译或填充。查看core.js的[caveats section](https://github.com/zloirock/core-js#caveats-when-using-symbol-polyfill)获取更多细节。
 
 ### 子类内置
 
