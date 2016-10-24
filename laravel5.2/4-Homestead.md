@@ -62,7 +62,7 @@ bash init.sh
 
 ### 设置你的供应商
 
-`~/.homestead/Homestead.yaml`文件中的`provider`键表明了应当使用哪个Vagrant供应商：`virtualbox`, `vmware_fusion`, 或者`vmware_workstation`。你可以安妮所需将这个设置到供应商上面：
+`~/.homestead/Homestead.yaml`文件中的`provider`键表明了应当使用哪个Vagrant供应商：`virtualbox`, `vmware_fusion`, 或者`vmware_workstation`。你可以按你所需将这个设置到供应商上面：
 
 ```
 provider: virtualbox
@@ -121,7 +121,7 @@ http://homestead.app
 
 ## 每个项目安装
 
-行对于全局安装Homestead并为你的所有项目共享同样的Homestead盒子，你也可以为你的每个项目配置一个Homestead实例。为每个项目安装Homestead可能在你希望将一个`Vagrantfile`和你的项目一起运营时带来福利，允许工作在这个项目上的别的简单地`vagrant up`。
+相对于全局安装Homestead并为你的所有项目共享同样的Homestead盒子，你也可以为你的每个项目配置一个Homestead实例。为每个项目安装Homestead可能在你希望将一个`Vagrantfile`和你的项目一起运营时带来福利，允许工作在这个项目上的别的东西简单地`vagrant up`。
 
 要直接将Homestead安装到你的项目下，用Composer require它：
 
