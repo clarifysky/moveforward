@@ -451,6 +451,30 @@ For example, <code>&lt;section&gt;</code> should be wrapped as inline.
 类`.visible-xs`,`.visible-sm`,`.visible-md`和`.visible-lg`同样存在，不过在**v3.2.0中弃用了**。它们大约和`.visible-*-block`相等，除了额外的如切换`<table>`相关元素的情况。
 
 
+## 助手类
+
+### 快速浮动
+
+`pull-left`,`pull-right`
+
+```css
+// Classes
+.pull-left {
+  float: left !important;
+}
+.pull-right {
+  float: right !important;
+}
+
+// Usage as mixins
+.element {
+  .pull-left();
+}
+.another-element {
+  .pull-right();
+}
+```
+
 
 
 

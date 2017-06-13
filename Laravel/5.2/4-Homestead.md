@@ -182,13 +182,15 @@ function homestead() {
 
 `homestead`数据库同时为MySQL和Postgres配置好了，为了更加方便，Laravel的`.env`配置好了使用这个数据库的框架。
 
-要从你的宿主机器通过Navicat或Sequel Pro连接到你的MySQL或Postgres数据库，你应当连接到`127.0.0.1`和端口`3306`（MySQL）或`54320`(Postgres)。这两个数据库的用户名和密码都是`homestead/secret`。
+要从你的宿主机器通过Navicat或Sequel Pro连接到你的MySQL或Postgres数据库，你应当连接到`127.0.0.1`和端口`33060`（MySQL）或`54320`(Postgres)。这两个数据库的用户名和密码都是`homestead/secret`。
 
 > 你应当仅在从你的宿主机器连接到数据库时使用这些非标准端口。由于Laravel运行在虚拟机内，你将在你的Laravel数据库配置文件中使用默认的3306和5432端口。
 
 ## 添加额外的站点
 
 一旦你的Homestead环境准备好并运行了，你可能希望为你的Laravel应用添加额外的Nginx站点。你可以随意地在单个Homestead环境内运行多个Laravel安装。要添加额外的站点，简单地将那个站点添加到你的`~/.homestead/Homestead.yaml`文件中，并然后从你的Homestead目录运行`vagrant provision`命令。
+
+> 别忘了修改/etc/hosts来支持你的新站点！
 
 ##  配置Cron进度
 
