@@ -4,6 +4,11 @@ https://framework.zend.com/manual/2.2/en/tutorials/tutorial.eventmanager.html
 
 这篇教程探索了`Zend\EventManager`的多种特性。
 
+> 一个触发器会触发绑定在其上的所有监听器（使用`attach`来指定绑定在`event`上的`listener`）
+> 若要短路监听器的执行，有两种做法：
+> 1、给trigger增加第四个参数，这个参数是个回调，这个回调的参数是`listener`的执行结果，根据其结果作出`true`／`false`，如果在这个回调里面返回了`true`，则会短路`listener`的执行，后续的其他`listener`均不再执行。
+> 2、在`listener`内中断事件传播。`$e->stopPropagation();`
+
 ## 术语
 
 - **event（事件）**是一个命名的行为
@@ -103,7 +108,7 @@ $example->do('bar', 'bat');
 
 `EventManager`实现提供的一个层面是组织`SharedEventManagerInterface`实现的能力。
 
-`Zend\EventManager\SharedEventManagerInterface`描述了一个为附加到带有特定*标识符*的对象上的事件聚合监听器的对象。它自身不会触发事件。相反，一个组织了`SharedEventManager`的`EventManager`实例会为在它感兴趣的标识符上的监听器查询`SharedEventManger`，然后触发那些监听器。
+`Zend\EventManager\SharedEventManagerInterface`描述了一个为附加到带有特定*标识符*的对象上的事件*聚合*监听器的对象。它自身不会触发事件。相反，一个组织了`SharedEventManager`的`EventManager`实例会查询`SharedEventManger`来得到它所感兴趣的标识符上的监听器，然后触发那些监听器。
 
 这到底是怎样工作的？
 
@@ -128,9 +133,9 @@ $sharedEvents->attach('Example', 'do', function($e) {
 
 这个看起来几乎和上一个例子一样；主要的区别是这里在*开始*处有一个额外的参数`'Example'`。这段代码基本上在说，“监听'Example'目标上的'do'事件，当收到通知后，执行回调”。
 
-这是`EventManager`的`setIdentifiers()`参数开始工作的地方。这个方法允许传入一个字符串，或是一个字符串数组，来定义给定的实例感兴趣的运行上下文或target的名字。如果给了一个数组，那么任意给出targets上的任意监听器都会被通知。
+这是`EventManager`的`setIdentifiers()`参数开始工作的地方。这个方法允许传入一个字符串，或是一个字符串数组，来定义名字或上下文名字或给定实例感兴趣的目标。如果给了一个数组，那么在给出的任意targets上的任意监听器都会被通知。
 
-所以，回到上面的例子上，我们假定上面的共享监听器被注册了，并且`Example`类就如上面定义的。我们可以接下来执行下面的： 
+所以，回到上面的例子上，我们假定上面的共享监听器被注册了，并且`Example`类就如上面定义的。我们可以接下来执行下面的：
 
 ```php
 $example = new Example();
@@ -153,7 +158,7 @@ class SubExample extends Example {
 
 一个关于`setEventManager()`的有趣的方面是我们定义了它来同时监听`__CLASS__`和`get_class($this)`。这就意味着，调用`SubExample`上的`do()`同样会触发共享监听器！这也意味着，如果必要，我们可以附加到特定的`SubExample`上，这时候，只附加到`Example`目标上的监听器将不会被触发。
 
-最终，用作上下文或目标的名字比必要是类名字；它们可以是一些仅在你的应用中有意义的名字。例如，你可能有一系列响应“log”或“cache”的类，这些上的监听器会被它们中的任何一个通知到。
+最终，用作上下文或目标的名字必须要是类名字；它们可以是一些仅在你的应用中有意义的名字。例如，你可能有一系列响应“log”或“cache”的类，这些上的监听器会被它们中的任何一个通知到。
 
 > 我们建议使用类名，接口名，和／或抽象类名作为标识符。这样的话，确定哪些事件可用就变得容易了，这也包括找出哪些监听器可能被附加到那些事件上。接口造就了一个尤其好用的用例，它们允许一个操作附加（事件）给一组相关的类。
 
@@ -233,7 +238,76 @@ $sharedEvents->attach(
 
 指定多个目标和/或事件来附加的能力能够极大地苗条你的代码。
 
-## 监听器聚合
+## 聚合监听器
+
+另一个实现监听多个事件的方式是聚合监听器，由`Zend\EventManager\ListenerAggregateInterface`代表。通过这个实现，但一类可以监听多个事件，附加多个实例方法作为监听器。
+
+这个接口定义了两个方法，`attach(EventManagerInterface $events)`和`detach(EventManagerInterface $events)`。通常，你需要传递一个`EventManager`给他们，然后就可以开始实现他们并决定如何做了。
+
+一个例子：
+
+```php
+use Zend\EventManager\EventInterface;
+use Zend\EventManager\EventManagerInterface;
+use Zend\EventManager\ListenerAggregateInterface;
+use Zend\Log\Logger;
+
+class LogEvents implements ListenerAggregateInterface {
+    protected $listeners = array();
+    protected $log;
+    
+    public function __construct (Logger $log) {
+        $this->log = $log;
+    }
+    
+    public function attach(EventManagerInterface $events) {
+        $this->listeners[] = $events->attach('do', array($this, 'log'));
+        $this->listeners[] = $events->attach('doSomethingElse', array($this, 'log'));
+    }
+    
+    public function detach(EventCollection $events) {
+        foreach ($this->$listeners as $index => $listener) {
+            if ($events->detach($listener)) {
+                unset($this->listeners[$index]);
+            }
+        }
+    }
+    
+    public function log(EventInterface $e) {
+        $events = $e->getName();
+        $params = $e->getParams();
+        $this->log->info(sprintf('%s: %s', $event, json_encode($params)));
+    }
+}
+```
+
+你可以使用`attach()`或`attachAggregate()`来附加。
+
+```php
+$logListener = new LogEvents($logger);
+
+$events->attachAggregate($logListener);
+$events->attach($logListener);
+```
+
+当触发时，聚合起器附加上的任意事件都会被通知。
+
+为什么烦恼？两个原因：
+
+- 聚合器允许你拥有全状态的监听器。上面的例子通过logger证明了这个。另外一个例子是追踪配置选项。
+- 聚合器使解除监听附加变得方便，当调用`attach()`时，你会收到一个`Zend\Stdlib\CallbackHandler`实例；解除（`detach()`）监听的唯一方式是把那个实例传回-这意味着，如果你想要在后面detach，你需要把哪个实例保存在某个地方。聚合器已经为你做了这些——如上面例子中你看到的一样。
+
+### 结果反省
+
+有时候你需要知道你的监听器返回了什么。你需要记住，你可能在一个事件上有多个监听器；对于结果的接口必须保持一致而不要管监听器的数量。
+
+`EventManager`实现默认返回了`Zend\EventManager\ResponseCollection`实例。这个类继承了PHP的`SplStack`，允许你以反向遍历响应（由于最后一个被执行的有可能是你最感兴趣的额那个）。它还实现了下述方法：
+
+- `first()`会拉取第一个接收到的结果
+- `last()`会拉取最后一个接收到的结果
+- `contains($value)`允许你测试所有的值来看是否一个给定的值已经被收到了，收到了就会返回布尔值`true`，否则返回`false`。
+
+通常，你不需要担心从事件返回的结果，由于触发事件的对象不会真正了解有哪些监听器附加到它上面。然而，有时你需要在感兴趣的数据得到之后短路监听器执行。
 
 ### 短路监听器执行
 
@@ -275,6 +349,37 @@ $events->attach('do', function ($e) {
     return new SomeResultClass();
 });
 ```
-这种情况，当然，在使用触发模型的时候搞出了一些歧义，如你不能够再确定最后一个结果是否符合你搜寻的标准。因此，我们建议将一种或别的实现标准化。
+这种情况，当然，在使用触发模型的时候搞出了一些歧义，如你不能够再确定最后一个结果是否符合你搜寻的标准。因此，我们建议将一种实现或别的实现标准化。
+
+### 保持有序
+
+偶然情况下，你可能需要关心监听器执行的顺序。例如，你可能希望尽早地做一些日志，以便在短路发生时你已经做好了日志；或者，实现一个缓存，在缓存命中时尽早返回它，在保存缓存时稍晚点执行。
+
+每一个`EventManager::attach()`和`SharedEventManager::attach()`接收一个额外的参数，一个*priority*。默认情况下，如果这个参数缺省了，监听器就会获得一个1的权限，然后按照它们在附加的时候顺序执行。然而，如果你提供了一个权限值，你就会影响这个执行顺序。
+
+- 高权限值早执行
+- 低权限值晚执行
+
+例子
+
+```php
+$priority = 100;
+$events->attach('Example', 'do', function ($e) {
+    $event = $e->getName();
+    $target = get_class($e->getTarget());
+    $params = $e->getParams();
+    
+    printf(
+        'Handled event "%s" on target "%s", with parameters %s',
+        $event,
+        $target,
+        json_encode($params)
+    );
+}, $priority);
+```
+
+这个就会早执行，如果你将权限值改为了`-100`，他就会以一个低的权限执行，执行得比较迟。
+
+应当避免设置权限，除非确实必要。
 
 
